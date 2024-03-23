@@ -1,8 +1,6 @@
 import math
 from telegram import (
     ReplyKeyboardRemove,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
     Update,
     InlineKeyboardMarkup,
 )
@@ -34,6 +32,10 @@ async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return NAME
 
 
+async def resend_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("✍️ Ilimos Faqat Ismingizni Yozing!")
+
+
 async def name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = update.message.text
     context.user_data["name"] = name
@@ -41,11 +43,19 @@ async def name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return SURNAME
 
 
+async def resend_surname(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("✍️ Ilimos Faqat Familiyangizni Yozing!")
+
+
 async def surname(update: Update, context: ContextTypes.DEFAULT_TYPE):
     surname = update.message.text
     context.user_data["surname"] = surname
     await update.message.reply_text("📅 Necha yoshdasiz?")
     return AGE
+
+
+async def resend_age(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📅 Ilimos Faqat Yoshingizni Kiriting!")
 
 
 async def age(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -67,6 +77,12 @@ async def age(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return AGE
 
 
+async def resend_phone_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "📱 Iltimos Faqat Telefon Raqamingizni Jo'nating!", reply_markup=send_contact()
+    )
+
+
 async def phone_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phone_number = update.message.contact.phone_number
     context.user_data["phone_number"] = "+" + phone_number
@@ -81,6 +97,10 @@ async def phone_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return REGION
 
 
+async def resend_region(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Iltimos yuqoridagi viloyatlardan birini tanlang!"),
+
+
 async def region(update: Update, context: ContextTypes.DEFAULT_TYPE):
     region = update.callback_query.data
     context.user_data["region"] = region
@@ -91,6 +111,10 @@ async def region(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ),
 
     return LANGUAGE
+
+
+async def resend_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Iltimos yuqoridagi tillardan birini tanlang!"),
 
 
 async def lang_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -191,14 +215,30 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler("register", register)],
     states={
-        NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, name)],
-        SURNAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, surname)],
-        AGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, age)],
-        PHONE_NUMBER: [
-            MessageHandler(filters.CONTACT & ~filters.COMMAND, phone_number)
+        NAME: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, name),
+            MessageHandler(filters.ALL, resend_name),
         ],
-        REGION: [CallbackQueryHandler(region)],
-        LANGUAGE: [CallbackQueryHandler(lang_callback_handler)],
+        SURNAME: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, surname),
+            MessageHandler(filters.ALL, resend_surname),
+        ],
+        AGE: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, age),
+            MessageHandler(filters.ALL, resend_age),
+        ],
+        PHONE_NUMBER: [
+            MessageHandler(filters.CONTACT & ~filters.COMMAND, phone_number),
+            MessageHandler(filters.ALL, resend_phone_number),
+        ],
+        REGION: [
+            CallbackQueryHandler(region),
+            MessageHandler(filters.ALL, resend_region),
+        ],
+        LANGUAGE: [
+            CallbackQueryHandler(lang_callback_handler),
+            MessageHandler(filters.ALL, resend_language),
+        ],
     },
     fallbacks=[CommandHandler("cancel", cancel)],
 )
